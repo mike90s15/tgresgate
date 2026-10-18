@@ -1,0 +1,18 @@
+# Serviço systemd para deixar o tgresgate vigiando 24h.
+# Ajuste User e os caminhos se instalou em outro lugar. Veja o README.
+[Unit]
+Description=tgresgate - backup automático de canais do Telegram
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tgresgate
+WorkingDirectory=/opt/tgresgate
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/tgresgate/venv/bin/python tgresgate.py vigiar
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

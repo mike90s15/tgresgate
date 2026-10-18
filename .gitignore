@@ -1,0 +1,12 @@
+# Dados pessoais — NUNCA enviar
+config.json
+sessoes/
+*.session
+*.session-journal
+backup/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/

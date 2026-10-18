@@ -1,0 +1,11 @@
+{
+  "api_id": 1234567,
+  "api_hash": "0123456789abcdef0123456789abcdef",
+  "contas": [
+    {"nome": "principal"},
+    {"nome": "reserva"}
+  ],
+  "canais": "meus",
+  "segundos_entre_posts": 3,
+  "minutos_entre_varreduras": 15
+}
