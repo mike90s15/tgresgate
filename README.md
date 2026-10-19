@@ -109,7 +109,7 @@ Se preferir editar à mão, copie `config.example.json` para `config.json`:
 |---|---|
 | `api_id`, `api_hash` | A chave do passo 2.1. |
 | `contas` | Um apelido para cada conta do Telegram que vai ser usada. O apelido é só para você identificar. |
-| `canais` | `"meus"` salva todo canal/grupo em que alguma conta é **dona ou admin**. Para escolher, use uma lista: `["@meucanal", -1001234567890]`. |
+| `canais` | `"todos"` salva **todo canal/grupo em que a conta participa**. `"meus"` salva só onde alguma conta é **dona ou admin**. Para escolher, use uma lista: `["@meucanal", -1001234567890]`. |
 | `segundos_entre_posts` | Pausa entre posts na restauração. Valores muito baixos podem fazer o Telegram bloquear a conta por spam. |
 | `minutos_entre_varreduras` | No modo `vigiar`, a cada quantos minutos ele confere se passou algo (tópicos novos, canais novos). |
 | `pasta_backup`, `pasta_sessoes` | *(opcional)* Onde guardar o backup e os logins. O padrão é `backup/` e `sessoes/`. |
@@ -145,7 +145,7 @@ Ele pergunta um apelido, salva no config sozinho e **já faz o login** (telefone
 |---|---|
 | `tgresgate.py conta adicionar` | Adiciona uma conta nova e já faz o login. Ideal quando a conta antiga cai. |
 | `tgresgate.py listar` | Mostra os canais/grupos de cada conta, com os IDs. |
-| `tgresgate.py backup` | Salva tudo o que ainda não foi salvo e termina. Na primeira vez baixa o histórico inteiro. |
+| `tgresgate.py backup` | Salva tudo o que ainda não foi salvo e termina. Na primeira vez baixa o histórico inteiro. Use `--conta <apelido>` para salvar só uma conta. |
 | `tgresgate.py vigiar` | Faz o backup e **fica ligado**, salvando cada post novo na hora. |
 | `tgresgate.py status` | Mostra o que já está salvo de cada canal. |
 | `tgresgate.py restaurar <ID>` | Cria um canal novo e reposta tudo. Veja a seção 4. |

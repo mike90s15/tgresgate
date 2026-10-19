@@ -116,9 +116,16 @@ def conta_por_nome(nome):
     sys.exit(f"Conta '{nome}' não existe no config. Contas: {', '.join(x['nome'] for x in CFG['contas'])}")
 
 
-async def conectar_todas():
+async def conectar_todas(somente=None):
+    """Conecta as contas logadas. Se 'somente' for um nome, usa só essa conta."""
+    contas = CFG["contas"]
+    if somente:
+        contas = [x for x in contas if x["nome"] == somente]
+        if not contas:
+            sys.exit(f"Conta '{somente}' não existe no config. "
+                     f"Contas: {', '.join(x['nome'] for x in CFG['contas'])}")
     clientes = []
-    for conta in CFG["contas"]:
+    for conta in contas:
         c = novo_cliente(conta)
         await c.connect()
         if await c.is_user_authorized():
@@ -148,12 +155,18 @@ def topico_de(msg, forum):
 
 
 async def canais_da_conta(c):
-    """Canais que esta conta deve salvar: a lista do config ou "meus" (onde é dono/admin)."""
+    """Canais que esta conta deve salvar:
+    - "todos": todo canal/grupo que a conta participa;
+    - "meus": só onde a conta é dona ou admin;
+    - lista: só os @usuarios/IDs informados no config."""
     achados = []
-    if CFG["canais"] == "meus":
+    modo = CFG["canais"]
+    if modo in ("todos", "meus"):
         async for d in c.iter_dialogs():
+            if not d.is_channel:
+                continue  # grupos básicos antigos não são suportados
             e = d.entity
-            if d.is_channel and (e.creator or e.admin_rights):
+            if modo == "todos" or e.creator or e.admin_rights:
                 achados.append(e)
     else:
         for ref in CFG["canais"]:
@@ -430,8 +443,8 @@ async def cmd_listar():
                 print(f"{d.id:>16}  [{tipo:^7}]  {d.name}")
 
 
-async def cmd_backup():
-    await backup_todos(await mapear(await conectar_todas()))
+async def cmd_backup(conta=None):
+    await backup_todos(await mapear(await conectar_todas(conta)))
 
 
 async def cmd_vigiar():
@@ -496,7 +509,8 @@ def main():
     pr = sc.add_parser("remover", help="tira uma conta do config")
     pr.add_argument("nome", help="apelido da conta a remover")
     sub.add_parser("listar", help="mostra os canais de cada conta, com os IDs")
-    sub.add_parser("backup", help="salva o que falta e termina")
+    pb = sub.add_parser("backup", help="salva o que falta e termina")
+    pb.add_argument("--conta", help="faz backup só desta conta (padrão: todas)")
     sub.add_parser("vigiar", help="backup + fica ligado salvando cada post novo")
     sub.add_parser("status", help="mostra o que já foi salvo")
     r = sub.add_parser("restaurar", help="cria um canal novo e reposta tudo do backup")
@@ -526,7 +540,7 @@ def main():
             return asyncio.run(cmd_conta_adicionar(a.config, a.nome))
         return pc.print_help()
     acoes = {
-        "login": cmd_login, "listar": cmd_listar, "backup": cmd_backup, "vigiar": cmd_vigiar,
+        "login": cmd_login, "listar": cmd_listar, "backup": lambda: cmd_backup(a.conta), "vigiar": cmd_vigiar,
         "restaurar": lambda: restaurar(a.origem, a.destino, a.conta, a.titulo),
     }
     try:
