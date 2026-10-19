@@ -364,7 +364,7 @@ async def cmd_listar():
         print(f"\n== {c.nome} ==")
         async for d in c.iter_dialogs():
             if d.is_channel:
-                tipo = "tópicos" if eh_forum(d.entity) else "canal" if d.is_broadcast else "grupo"
+                tipo = "tópicos" if eh_forum(d.entity) else "canal" if getattr(d.entity, "broadcast", False) else "grupo"
                 print(f"{d.id:>16}  [{tipo:^7}]  {d.name}")
 
 
