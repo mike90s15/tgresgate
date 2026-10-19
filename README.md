@@ -144,6 +144,8 @@ Ele pergunta um apelido, salva no config sozinho e **já faz o login** (telefone
 | Comando | O que faz |
 |---|---|
 | `tgresgate.py conta adicionar` | Adiciona uma conta nova e já faz o login. Ideal quando a conta antiga cai. |
+| `tgresgate.py conta listar` | Mostra as contas e se cada uma está logada. |
+| `tgresgate.py conta remover <apelido>` | Tira uma conta do config (e apaga a sessão dela). |
 | `tgresgate.py listar` | Mostra os canais/grupos de cada conta, com os IDs. |
 | `tgresgate.py backup` | Salva tudo o que ainda não foi salvo e termina. Na primeira vez baixa o histórico inteiro. Use `--conta <apelido>` para salvar só uma conta. |
 | `tgresgate.py vigiar` | Faz o backup e **fica ligado**, salvando cada post novo na hora. |
@@ -206,7 +208,7 @@ Opções:
 
 > **Tempo:** com a pausa padrão de 3 s, 1.000 posts levam cerca de 50 minutos. Se o Telegram pedir para esperar (*flood wait*), o programa espera sozinho e continua.
 
-> **Perdeu o número?** Crie uma conta nova, coloque-a no `config.json`, rode `login` e depois `restaurar`. Basta ter a pasta `backup/`.
+> **Perdeu o número?** Rode `conta adicionar` para logar uma conta nova (ela já entra no config) e depois `restaurar`. Basta ter a pasta `backup/`.
 
 ## 5. Deixar rodando 24h (servidor / systemd)
 
