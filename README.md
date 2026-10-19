@@ -18,6 +18,29 @@ Quem vende conteúdo, dá cursos ou mantém comunidade no Telegram costuma ter t
 - **Não depende da conta original:** perdeu o número? Faça login com uma conta nova e restaure a partir da pasta de backup.
 - Funciona no **Linux, Windows, macOS e Android (Termux)**, e roda 24h como serviço do systemd.
 
+## Começo rápido
+
+Do zero até o backup rodando, nesta ordem (Linux/macOS/Termux):
+
+```bash
+# 1. instalar
+./instalar.sh
+
+# 2. criar o config respondendo 3 perguntas (chave de API, contas, canais)
+./venv/bin/python tgresgate.py configurar
+
+# 3. logar sua(s) conta(s) — telefone + código, só uma vez
+./venv/bin/python tgresgate.py login
+
+# 4. baixar tudo (pode repetir quando quiser; retoma de onde parou)
+./venv/bin/python tgresgate.py backup
+
+# 5. se um canal cair: recria e reposta tudo (veja o ID com 'status')
+./venv/bin/python tgresgate.py restaurar <ID_DO_CANAL>
+```
+
+Precisa somar uma conta depois (ex.: a antiga foi banida)? `conta adicionar` loga uma nova e já a inclui no config — sem editar arquivo. Os detalhes de cada passo estão nas seções abaixo.
+
 ## Gostou? Me ajude a continuar
 
 Pense no dia em que seu canal cair: anos de posts, aulas e clientes voltando ao ar com um único comando. O tgresgate é gratuito e vai continuar assim, mas ele só melhora se mais gente souber que ele existe.
@@ -31,6 +54,7 @@ Cada seguidor e cada estrela são o sinal de que vale a pena continuar atualizan
 
 ## Índice
 
+- ⚡ [Começo rápido](#começo-rápido)
 1. [Instalação](#1-instalação)
 2. [Configuração](#2-configuração)
 3. [Uso](#3-uso)
