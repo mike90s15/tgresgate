@@ -124,10 +124,26 @@ Uma conta pode ter api_id/api_hash próprios: `{"nome": "x", "api_id": 111, "api
 
 Ele pede, para cada conta, o número (com DDI, ex.: `+5511999998888`), o código que chega no app do Telegram e a senha de duas etapas, se tiver. **Só precisa fazer uma vez.**
 
+### 2.4 Adicionar uma conta depois (sem mexer em arquivo)
+
+Caiu a conta, foi banida ou você quer somar mais uma? Não precisa editar o `config.json` na mão:
+
+```bash
+./venv/bin/python tgresgate.py conta adicionar
+```
+
+Ele pergunta um apelido, salva no config sozinho e **já faz o login** (telefone + código). Outros comandos:
+
+```bash
+./venv/bin/python tgresgate.py conta listar      # quais contas existem e se estão logadas
+./venv/bin/python tgresgate.py conta remover x   # tira a conta "x"
+```
+
 ## 3. Uso
 
 | Comando | O que faz |
 |---|---|
+| `tgresgate.py conta adicionar` | Adiciona uma conta nova e já faz o login. Ideal quando a conta antiga cai. |
 | `tgresgate.py listar` | Mostra os canais/grupos de cada conta, com os IDs. |
 | `tgresgate.py backup` | Salva tudo o que ainda não foi salvo e termina. Na primeira vez baixa o histórico inteiro. |
 | `tgresgate.py vigiar` | Faz o backup e **fica ligado**, salvando cada post novo na hora. |

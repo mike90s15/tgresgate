@@ -62,6 +62,16 @@ def carregar_config(caminho):
     abrir_banco()
 
 
+def salvar_config(caminho):
+    """Grava o config.json de volta (usado ao adicionar/remover contas)."""
+    with open(caminho, "w", encoding="utf-8") as f:
+        json.dump(CFG, f, indent=2, ensure_ascii=False)
+    try:
+        os.chmod(caminho, 0o600)  # o config tem o api_hash
+    except OSError:
+        pass
+
+
 def abrir_banco():
     global db
     db = sqlite3.connect(os.path.join(DADOS, "backup.db"))
@@ -116,7 +126,9 @@ async def conectar_todas():
         else:
             log.warning("conta %s sem login — rode: python tgresgate.py login", c.nome)
     if not clientes:
-        sys.exit("Nenhuma conta logada. Rode: python tgresgate.py login")
+        sys.exit("Nenhuma conta logada.\n"
+                 "  Faça login:        python tgresgate.py login\n"
+                 "  Ou adicione uma:   python tgresgate.py conta adicionar")
     return clientes
 
 
@@ -349,14 +361,64 @@ def cmd_configurar(caminho):
     print(APOIE)
 
 
+async def logar_conta(conta):
+    """Faz o login de uma conta (pede telefone e código na primeira vez)."""
+    c = novo_cliente(conta)
+    print(f"\n== Conta '{c.nome}' ==")
+    print("   O Telegram vai pedir seu telefone com DDI (ex.: +5511999998888) e o código que ele enviar.")
+    await c.start()
+    eu = await c.get_me()
+    arroba = f" (@{eu.username})" if eu.username else ""
+    print(f"   ok, logado como {eu.first_name}{arroba}")
+    await c.disconnect()
+
+
 async def cmd_login():
     for conta in CFG["contas"]:
-        c = novo_cliente(conta)
-        print(f"\n== Conta '{c.nome}' ==")
-        await c.start()
-        eu = await c.get_me()
-        print(f"   ok, logado como {eu.first_name}")
-        await c.disconnect()
+        await logar_conta(conta)
+
+
+def cmd_conta_listar():
+    print("Contas cadastradas:")
+    for conta in CFG["contas"]:
+        sessao = os.path.join(SESSOES, conta["nome"] + ".session")
+        estado = "logada" if os.path.exists(sessao) else "SEM login — rode: python tgresgate.py login"
+        print(f"   • {conta['nome']}  —  {estado}")
+
+
+async def cmd_conta_adicionar(caminho, nome):
+    """Adiciona uma conta nova ao config e já faz o login dela. Ideal quando a conta antiga cai."""
+    nome = (nome or input("Apelido para a nova conta (ex.: conta2): ")).strip()
+    if not nome:
+        sys.exit("Nome vazio. Rode de novo com um apelido, ex.: python tgresgate.py conta adicionar conta2")
+    if any(c["nome"] == nome for c in CFG["contas"]):
+        sys.exit(f"Já existe uma conta chamada '{nome}'. Escolha outro apelido.")
+    CFG["contas"].append({"nome": nome})
+    salvar_config(caminho)
+    print(f"Conta '{nome}' adicionada. Agora o login:")
+    try:
+        await logar_conta({"nome": nome})
+    except Exception as e:
+        print(f"\nA conta foi salva no config, mas o login não terminou: {e}")
+        print("Quando quiser tentar de novo, rode: python tgresgate.py login")
+        return
+    print("\nPronto! A conta já pode fazer backup e restaurar. Use --conta "
+          f"{nome} para escolher ela ao restaurar.")
+    print(APOIE)
+
+
+def cmd_conta_remover(caminho, nome):
+    antes = len(CFG["contas"])
+    CFG["contas"] = [c for c in CFG["contas"] if c["nome"] != nome]
+    if len(CFG["contas"]) == antes:
+        sys.exit(f"Conta '{nome}' não existe. Veja as contas com: python tgresgate.py conta listar")
+    salvar_config(caminho)
+    sessao = os.path.join(SESSOES, nome + ".session")
+    apagou = ""
+    if os.path.exists(sessao):
+        os.remove(sessao)
+        apagou = " e a sessão dela foi apagada"
+    print(f"Conta '{nome}' removida do config{apagou}.")
 
 
 async def cmd_listar():
@@ -426,6 +488,13 @@ def main():
     sub = p.add_subparsers(dest="cmd", metavar="comando")
     sub.add_parser("configurar", help="cria o config.json respondendo perguntas")
     sub.add_parser("login", help="faz login em cada conta (só na primeira vez)")
+    pc = sub.add_parser("conta", help="adiciona, lista ou remove contas (login já incluso)")
+    sc = pc.add_subparsers(dest="acao", metavar="acao")
+    pa = sc.add_parser("adicionar", help="adiciona uma conta nova e já faz o login (ideal se a antiga cair)")
+    pa.add_argument("nome", nargs="?", help="apelido da conta (se não passar, pergunta)")
+    sc.add_parser("listar", help="mostra as contas e se estão logadas")
+    pr = sc.add_parser("remover", help="tira uma conta do config")
+    pr.add_argument("nome", help="apelido da conta a remover")
     sub.add_parser("listar", help="mostra os canais de cada conta, com os IDs")
     sub.add_parser("backup", help="salva o que falta e termina")
     sub.add_parser("vigiar", help="backup + fica ligado salvando cada post novo")
@@ -448,6 +517,14 @@ def main():
     carregar_config(a.config)
     if a.cmd == "status":
         return cmd_status()
+    if a.cmd == "conta":
+        if a.acao == "listar":
+            return cmd_conta_listar()
+        if a.acao == "remover":
+            return cmd_conta_remover(a.config, a.nome)
+        if a.acao == "adicionar":
+            return asyncio.run(cmd_conta_adicionar(a.config, a.nome))
+        return pc.print_help()
     acoes = {
         "login": cmd_login, "listar": cmd_listar, "backup": cmd_backup, "vigiar": cmd_vigiar,
         "restaurar": lambda: restaurar(a.origem, a.destino, a.conta, a.titulo),
